@@ -141,6 +141,9 @@ button:hover, input[type="submit"]:hover, .navButton:hover {
   border-radius: 3px;
   font-size: 14px;
   margin-top: 5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .tag span {
@@ -198,4 +201,528 @@ button:hover, input[type="submit"]:hover, .navButton:hover {
 #testimonyAuthor {
   font-size: 16px;
   margin-top: 10px;
+}
+
+/* Testimony Page Styles */
+.testimony-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.testimony-header {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(84, 107, 214, 0.1);
+  margin-bottom: 30px;
+}
+
+.testimony-title {
+  font-size: 2.5em;
+  color: #2a3356;
+  margin: 0 0 15px 0;
+  line-height: 1.2;
+}
+
+.testimony-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.author-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #546bd6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.author-name {
+  color: #546bd6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.author-name:hover {
+  text-decoration: underline;
+}
+
+.testimony-content {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(84, 107, 214, 0.1);
+  line-height: 1.8;
+  color: #2a3356;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.testimony-content:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(84, 107, 214, 0.15);
+}
+
+.testimony-text {
+  font-size: 1.1em;
+  margin-bottom: 30px;
+  line-height: 1.8;
+  color: #2a3356;
+}
+
+/* Rich text content styles */
+.testimony-text p {
+  margin-bottom: 1em;
+}
+
+.testimony-text strong {
+  font-weight: 600;
+}
+
+.testimony-text em {
+  font-style: italic;
+}
+
+.testimony-text ul, 
+.testimony-text ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.testimony-text li {
+  margin-bottom: 0.5em;
+}
+
+.testimony-text blockquote {
+  border-left: 4px solid #546bd6;
+  margin: 1em 0;
+  padding-left: 1em;
+  color: #4a4a4a;
+}
+
+.testimony-text h1 {
+  font-size: 1.8em;
+  margin: 1em 0 0.5em;
+}
+
+.testimony-text h2 {
+  font-size: 1.5em;
+  margin: 1em 0 0.5em;
+}
+
+.testimony-text code {
+  background: #f5f5f5;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.testimony-text pre {
+  background: #f5f5f5;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.testimony-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.tag {
+  background: #f0f3ff;
+  color: #546bd6;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  transition: background 0.3s ease;
+}
+
+.tag:hover {
+  transform: translateY(-2px);
+  background: #e1e5ff;
+  box-shadow: 0 2px 8px rgba(84, 107, 214, 0.15);
+}
+
+.tag::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+  transform: translateX(-100%);
+}
+
+.tag:hover::after {
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.testimony-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e1e5ff;
+  gap: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.action-button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primary-button {
+  background: #546bd6;
+  color: white;
+}
+
+.primary-button:hover {
+  background: #4353b0;
+}
+
+.secondary-button {
+  background: #f0f3ff;
+  color: #546bd6;
+}
+
+.secondary-button:hover {
+  background: #e1e5ff;
+}
+
+.edit-button {
+  background: #28a745;
+  color: white;
+}
+
+.edit-button:hover {
+  background: #218838;
+}
+
+.last-edited {
+  font-size: 0.9em;
+  color: #666;
+  font-style: italic;
+}
+
+/* Add these styles for the edit form */
+.edit-form {
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #2a3356;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e1e5ff;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #546bd6;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 200px;
+}
+
+.unpublished-message {
+  background: #fff3cd;
+  color: #856404;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ffeeba;
+}
+
+/* Add these styles for the checkbox */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.checkbox-group label {
+  cursor: pointer;
+  margin: 0;
+  font-weight: normal;
+}
+
+.help-text {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.testimony-tags {
+  min-height: 40px;
+  margin: 10px 0;
+}
+
+/* Rich Text Editor Styles */
+#editor-container {
+  height: 375px;
+  margin-bottom: 20px;
+}
+
+.ql-editor {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* Share Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.close-modal {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.share-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.share-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.share-option:hover {
+  background: #f0f3ff;
+}
+
+.share-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f0f3ff;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.share-link input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 5px;
+}
+
+.copy-button {
+  padding: 5px 10px;
+  border: none;
+  background: #546bd6;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.copy-button:hover {
+  background: #4353b0;
+}
+
+.heart-button {
+  background: #fff;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.heart-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  background: #fff3f3;
+  border-color: #ffcccc;
+}
+
+.heart-button i {
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-origin: center;
+}
+
+.heart-button:hover i {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.heart-button.hearted {
+  background: #ffe6e6;
+  color: #dc3545;
+  border-color: #dc3545;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+.heart-button.hearted i {
+  color: #dc3545;
+  animation: heartPop 0.6s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+}
+
+.heart-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(220, 53, 69, 0.3);
+  opacity: 0;
+  border-radius: 100%;
+  transform: translate(-50%, -50%) scale(1);
+  transition: all 0.5s ease;
+}
+
+.heart-button:active::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(20);
+  transition: all 0s ease;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.4) rotate(-10deg); }
+  70% { transform: scale(0.9) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* Floating hearts animation */
+.floating-heart {
+  position: fixed;
+  pointer-events: none;
+  animation: floatUpAndSpin 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  color: #dc3545;
+  opacity: 0;
+  font-size: 24px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  filter: drop-shadow(0 2px 4px rgba(220, 53, 69, 0.3));
+}
+
+@keyframes floatUpAndSpin {
+  0% {
+    transform: translateY(0) scale(0.5) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120px) scale(1.2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.private-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+  text-align: center;
 }

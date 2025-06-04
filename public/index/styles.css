@@ -294,30 +294,53 @@ button:hover, input[type="submit"]:hover, .navButton:hover {
 }
 
 .hero {
-  margin-top: 100px;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 40px;
-  border-radius: 10px;
+  margin: 60px auto;
+  max-width: 800px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 60px 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(84, 107, 214, 0.1);
+  text-align: center;
 }
 
 h1 {
-  font-size: 2.5em;
-  margin-bottom: 20px;
-  animation: fadeIn 1.5s ease-in-out;
-  text-align: center;
-}
-
-p {
-  font-size: 1.2em;
+  font-size: 3.5em;
   margin-bottom: 30px;
   animation: fadeIn 1.5s ease-in-out;
   text-align: center;
+  color: #2a3356;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.hero p {
+  font-size: 1.4em;
+  margin-bottom: 40px;
+  animation: fadeIn 1.5s ease-in-out;
+  text-align: center;
+  color: #546bd6;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #joinButton {
   animation: bounce 2s infinite;
-  display: block;
-  margin: 0 auto;
+  display: inline-block;
+  padding: 15px 40px;
+  font-size: 1.2em;
+  font-weight: 600;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #546bd6, #4353b0);
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 4px 15px rgba(84, 107, 214, 0.2);
+}
+
+#joinButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(84, 107, 214, 0.3);
+  background: linear-gradient(135deg, #4353b0, #364291);
 }
 
 @keyframes fadeIn {
@@ -335,4 +358,42 @@ p {
   60% {
     transform: translateY(-5px);
   }
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.feature-card {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(84, 107, 214, 0.1);
+  transition: transform 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 2.5em;
+  color: #546bd6;
+  margin-bottom: 15px;
+}
+.feature-title {
+  font-size: 1.2em;
+  color: #2a3356;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.feature-description {
+  font-size: 1em;
+  color: #666;
+  line-height: 1.5;
 }

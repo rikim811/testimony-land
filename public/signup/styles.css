@@ -97,7 +97,11 @@ form input:focus {
 }
 
 .password-checklist {
-  margin-bottom: 15px;
+  margin: 10px 0 20px;
+  background: #f8f9fa;
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
 .password-checklist ul {
@@ -108,11 +112,25 @@ form input:focus {
 
 .password-checklist li {
   font-size: 14px;
-  color: red;
+  color: #dc3545;
+  margin: 5px 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+.password-checklist li::before {
+  content: '✕';
+  margin-right: 8px;
+  font-weight: bold;
 }
 
 .password-checklist li.valid {
-  color: green;
+  color: #28a745;
+}
+
+.password-checklist li.valid::before {
+  content: '✓';
 }
 
 /* Ensure to place this in your styles.css */
@@ -136,30 +154,34 @@ form input:focus {
 }
 
 #verificationSection {
-  margin-top: 10px;
+  margin: 15px 0;
   display: flex;
-  align-items: center;
+  gap: 10px;
+  align-items: flex-start;
 }
 
-#verificationSection input[type="text"] {
-  flex: 1;
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #546bd6;
-  border-radius: 4px;
+#verificationStatus {
+  display: block;
+  margin-top: 5px;
+  font-size: 14px;
 }
 
 #sendCodeButton {
-  padding: 10px 20px;
-  font-size: 16px;
+  white-space: nowrap;
+  padding: 10px 15px;
   background: #546bd6;
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: 10px;
+  transition: background 0.3s ease;
 }
 
 #sendCodeButton:hover {
   background: #4353b0;
+}
+
+#sendCodeButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }

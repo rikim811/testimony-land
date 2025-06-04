@@ -8,37 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameInappropriate = document.getElementById('nameInappropriate');
   const passwordStrength = document.getElementById('passwordStrength');
   const signupForm = document.getElementById('signupForm');
-  const sendCodeButton = document.getElementById('sendCodeButton');
-  const verificationCodeInput = document.getElementById('verificationCode');
 
   let bannedWords = [];
-  let bannedEmails = [];
 
   // Load banned words from bannedlist.json
   async function loadBannedWords() {
     try {
       const response = await fetch('../bannedlist.json');
       const data = await response.json();
-      bannedWords = data || [];
+      bannedWords = data.bannedWords || [];
       console.log('Banned words loaded:', bannedWords);
     } catch (error) {
       console.error('Error loading banned words:', error);
       bannedWords = [];
-    }
-  }
-
-  // Load banned emails from firestore
-  async function loadBannedEmails() {
-    try {
-      const bannedEmailsRef = db.collection('bannedEmails');
-      const querySnapshot = await bannedEmailsRef.get();
-      querySnapshot.forEach(doc => {
-        bannedEmails.push(doc.data().email);
-      });
-      console.log('Banned emails loaded:', bannedEmails);
-    } catch (error) {
-      console.error('Error loading banned emails:', error);
-      bannedEmails = [];
     }
   }
 
@@ -59,9 +41,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const regex = /^[a-zA-Z0-9]{3,}$/;
 
     if (username) {
-      if (!regex.test(username) || isInappropriate(username) || username.toLowerCase() === 'null') {
-        usernameAvailability.textContent = 'Username is inappropriate or invalid';
-        usernameAvailability.style.color = 'red';
+      if (!regex.test(username)) {
+        usernameAvailability.textContent = 'Username must be at least 3 characters long and contain only letters and numbers';
+        usernameAvailability.style.color = '#dc3545';
+        return;
+      }
+
+      if (isInappropriate(username)) {
+        usernameAvailability.textContent = 'Username contains inappropriate content';
+        usernameAvailability.style.color = '#dc3545';
+        return;
+      }
+
+      if (username.toLowerCase() === 'null') {
+        usernameAvailability.textContent = 'This username is not allowed';
+        usernameAvailability.style.color = '#dc3545';
         return;
       }
 
@@ -69,34 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const querySnapshot = await usersRef.where('username', '==', username).get();
       if (querySnapshot.empty) {
         usernameAvailability.textContent = 'Username is available';
-        usernameAvailability.style.color = 'green';
+        usernameAvailability.style.color = '#28a745';
       } else {
         usernameAvailability.textContent = 'Username is taken';
-        usernameAvailability.style.color = 'red';
+        usernameAvailability.style.color = '#dc3545';
       }
     } else {
       usernameAvailability.textContent = '';
-    }
-  });
-
-  // Check email availability and appropriateness
-  emailInput.addEventListener('input', async () => {
-    const email = emailInput.value.trim();
-
-    if (bannedEmails.includes(email)) {
-      emailAvailability.textContent = 'Email is banned';
-      emailAvailability.style.color = 'red';
-      return;
-    }
-
-    const usersRef = db.collection('users');
-    const querySnapshot = await usersRef.where('email', '==', email).get();
-    if (querySnapshot.empty) {
-      emailAvailability.textContent = 'Email is available';
-      emailAvailability.style.color = 'green';
-    } else {
-      emailAvailability.textContent = 'Email is taken';
-      emailAvailability.style.color = 'red';
     }
   });
 
@@ -105,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = nameInput.value.trim();
     if (name && isInappropriate(name)) {
       nameInappropriate.textContent = 'Name is inappropriate';
-      nameInappropriate.style.color = 'red';
+      nameInappropriate.style.color = '#dc3545';
     } else {
       nameInappropriate.textContent = '';
     }
@@ -119,17 +92,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const number = /[0-9]/.test(password);
     const length = password.length >= 8;
 
-    document.getElementById('lowercase').style.color = lowercase ? 'green' : 'red';
-    document.getElementById('uppercase').style.color = uppercase ? 'green' : 'red';
-    document.getElementById('number').style.color = number ? 'green' : 'red';
-    document.getElementById('length').style.color = length ? 'green' : 'red';
+    const lowercaseElement = document.getElementById('lowercase');
+    const uppercaseElement = document.getElementById('uppercase');
+    const numberElement = document.getElementById('number');
+    const lengthElement = document.getElementById('length');
+
+    lowercaseElement.classList.toggle('valid', lowercase);
+    uppercaseElement.classList.toggle('valid', uppercase);
+    numberElement.classList.toggle('valid', number);
+    lengthElement.classList.toggle('valid', length);
 
     if (lowercase && uppercase && number && length) {
       passwordStrength.textContent = 'Password strength: Strong';
-      passwordStrength.style.color = 'green';
+      passwordStrength.style.color = '#28a745';
     } else {
       passwordStrength.textContent = 'Password strength: Weak';
-      passwordStrength.style.color = 'red';
+      passwordStrength.style.color = '#dc3545';
     }
   });
 
@@ -142,89 +120,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = nameInput.value.trim();
     const password = passwordInput.value;
     const nextStep = document.getElementById('nextStep').value;
-    const verificationCode = verificationCodeInput.value.trim();
 
-    if (!verificationCode) {
-      alert('Please enter the verification code sent to your email.');
+    // Validate inputs
+    if (isInappropriate(username) || isInappropriate(name)) {
+      alert('Please choose appropriate username and name without offensive content.');
       return;
     }
 
-    if (isInappropriate(username) || username.toLowerCase() === 'null' || isInappropriate(name)) {
-      alert('Please choose an appropriate username and name.');
-      return;
-    }
-
-    if (bannedEmails.includes(email)) {
-      alert('This email is banned. Please use a different email.');
+    if (username.toLowerCase() === 'null') {
+      alert('This username is not allowed.');
       return;
     }
 
     try {
+      // Create user account
       const userCredential = await auth.createUserWithEmailAndPassword(email, password);
       const user = userCredential.user;
 
-      // Verify email
-      await user.sendEmailVerification();
-      alert('A verification email has been sent to your email address. Please verify your email before proceeding.');
+      // Create user document
+      const userData = {
+        username: username,
+        email: email,
+        name: name,
+        bio: "",
+        age: "",
+        gender: "",
+        denomination: "",
+        socialMedia: "",
+        socialMediaType: "",
+        showAge: false,
+        showGender: false,
+        showDenomination: false,
+        showEmail: false,
+        privateProfile: false,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      };
 
-      // Monitor email verification
-      auth.onAuthStateChanged(async (user) => {
-        if (user && user.emailVerified) {
-          await db.collection('users').doc(user.uid).set({
-            username: username,
-            email: email,
-            name: name,
-            testimony: '',
-            title: '',
-            tags: [],
-            lastEdited: firebase.firestore.FieldValue.serverTimestamp()
-          });
+      await db.collection('users').doc(user.uid).set(userData);
 
-          if (nextStep === 'profile') {
-            window.location.href = `/profile/${username}?edit=true`;
-          } else {
-            window.location.href = `/testimony/${username}?edit=true`;
-          }
-        }
-      });
+      // Create initial testimony document
+      const testimonyData = {
+        authorId: user.uid,
+        authorUsername: username,
+        authorName: name,
+        title: "",
+        testimony: "",
+        tags: [],
+        heartCount: 0,
+        lastEdited: firebase.firestore.FieldValue.serverTimestamp(),
+        isPublished: false
+      };
 
+      await db.collection('testimonies').add(testimonyData);
+
+      // Redirect to profile page
+      window.location.href = `/profile/${username}`;
     } catch (error) {
-      console.error('Error signing up: ', error);
+      console.error('Error during signup:', error);
+      showError(error.message);
     }
   });
 
-  sendCodeButton.addEventListener('click', async () => {
-    try {
-      const user = auth.currentUser;
-      console.log('Current user:', user); // Debugging: Check if user object is correctly retrieved
-      if (user) {
-        await user.sendEmailVerification();
-        alert('Verification email resent. Please check your inbox.');
-      } else {
-        alert('No user is currently signed in.');
-      }
-    } catch (error) {
-      console.error('Error resending verification email: ', error);
-      alert('Failed to send verification email. Please try again later.');
-    }
-  });
-  
-  // Resend verification email
-  sendCodeButton.addEventListener('click', async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        await user.sendEmailVerification();
-        alert('Verification email resent. Please check your inbox.');
-      }
-    } catch (error) {
-      console.error('Error resending verification email: ', error);
-    }
-  });
-
-  // Load the banned words and banned emails when the page loads
+  // Load the banned words when the page loads
   loadBannedWords();
-  loadBannedEmails();
 });
 
 document.getElementById('branding').addEventListener('click', () => {

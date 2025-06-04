@@ -1,4 +1,111 @@
 let bannedWords = [];
+let testimonyDoc = null;
+let currentUser = null;
+
+// DOM Elements (declare these at the top level)
+let profileAvatar;
+let profileName;
+let testimonyTitle;
+let testimonyText;
+let lastEdited;
+let actionButtons;
+let testimonyTags;
+
+// Helper Functions
+function getInitials(name) {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase();
+}
+
+function formatDate(date) {
+  const now = new Date();
+  const diff = now - date;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+// Update testimony function (move outside DOMContentLoaded)
+function updateTestimony(testimonyData, currentUser) {
+  // Update page title and content
+  document.title = `${testimonyData.title} - Testimony Land`;
+  testimonyTitle.textContent = testimonyData.title;
+  
+  // Update testimony content with HTML formatting
+  testimonyText.innerHTML = testimonyData.testimony || '';
+  
+  // Update author info
+  profileAvatar.textContent = getInitials(testimonyData.authorName);
+  profileName.textContent = testimonyData.authorName;
+  profileName.href = `/profile/${testimonyData.authorUsername}`;
+
+  // Update last edited date
+  if (testimonyData.lastEdited) {
+    lastEdited.textContent = `Last edited ${formatDate(testimonyData.lastEdited.toDate())}`;
+  }
+
+  // Update tags
+  testimonyTags.innerHTML = '';
+  if (testimonyData.tags && testimonyData.tags.length > 0) {
+    testimonyData.tags.slice(0, 3).forEach(tag => {
+      const tagElement = document.createElement('span');
+      tagElement.className = 'tag';
+      tagElement.textContent = tag;
+      testimonyTags.appendChild(tagElement);
+    });
+  }
+
+  // Check if current user is the author
+  const isAuthor = currentUser?.username === testimonyData.authorUsername;
+
+  // Update action buttons
+  actionButtons.innerHTML = '';
+  
+  if (isAuthor) {
+    // Show edit button for author
+    actionButtons.innerHTML = `
+      <button class="action-button edit-button" id="editButton">
+        <i class="fas fa-edit"></i> Edit Testimony
+      </button>
+    `;
+    document.getElementById('editButton').addEventListener('click', () => {
+      window.location.href = `/testimony/edit/${testimonyData.authorUsername}`;
+    });
+  } else if (currentUser) {
+    // Show heart button for logged-in non-authors
+    actionButtons.innerHTML = `
+      <button class="action-button heart-button" id="heartButton">
+        <i class="fas fa-heart"></i> Heart (${testimonyData.heartCount || 0})
+      </button>
+    `;
+    document.getElementById('heartButton').addEventListener('click', handleHeart);
+    updateHeartButton();
+  }
+}
+
+// Initialize DOM elements when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize DOM elements
+  profileAvatar = document.getElementById('authorAvatar');
+  profileName = document.getElementById('authorName');
+  testimonyTitle = document.getElementById('testimonyTitle');
+  testimonyText = document.getElementById('testimonyText');
+  lastEdited = document.getElementById('lastEdited');
+  actionButtons = document.getElementById('actionButtons');
+  testimonyTags = document.getElementById('testimonyTags');
+
+  // ... rest of your DOMContentLoaded code ...
+});
 
 // Fetch the banned words from the server
 async function fetchBannedWords() {
@@ -48,203 +155,197 @@ function updateFormTags() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await fetchBannedWords();
+// Testimony Management Functions
+async function loadTestimony() {
+  const username = window.location.pathname.split('/').pop(); // Extract username from the URL
+  console.log('Fetching testimony for:', username); // Log the username
 
-  function getUsernameFromPath() {
-    const path = window.location.pathname.split('/');
-    return path[path.length - 1];
-  }
+  try {
+    const testimonySnapshot = await db.collection('testimonies')
+      .where('authorUsername', '==', username)
+      .get();
 
-  function updateNavLinks(user) {
-    const navLinks = document.getElementById('navLinks');
-    navLinks.innerHTML = '';
+    console.log('Testimony snapshot:', testimonySnapshot); // Log the snapshot
 
-    if (user) {
-      db.collection('users').doc(user.uid).get().then((doc) => {
-        if (doc.exists) {
-          const userData = doc.data();
-          const username = userData.username || user.email.split('@')[0];
-          navLinks.innerHTML = `
-            <li><a href="/testimony/${username}">Testimony</a></li>
-            <li><a href="/profile/${username}">Profile</a></li>
-            <li><a href="/search/index.html" class="whiteButton">Search</a></li>
-            <li><a href="#" id="logoutButton" class="whiteButton">Logout</a></li>
-          `;
-          const logoutButton = document.getElementById('logoutButton');
-          if (logoutButton) {
-            logoutButton.addEventListener('click', () => {
-              auth.signOut().then(() => {
-                window.location.href = '/login/index.html';
-              });
-            });
-          }
-        }
-      }).catch((error) => {
-        console.error('Error fetching user data:', error);
-      });
-    } else {
-      navLinks.innerHTML = `
-        <li><a href="/search/index.html" class="whiteButton">Search</a></li>
-        <li><a href="/signup/index.html" class="whiteButton">Sign Up</a></li>
-        <li><a href="/login/index.html" class="whiteButton">Login</a></li>
-      `;
+    if (testimonySnapshot.empty) {
+      console.log('No testimony found for this user.');
+      testimonyText.textContent = 'No testimony available.';
+      return;
     }
-  }
 
-  function displayTags(tags) {
-    const tagsContainer = document.getElementById('testimonyTags');
-    tagsContainer.innerHTML = '';
-    tags.forEach(tag => {
-      const tagElement = document.createElement('div');
-      tagElement.classList.add('tag');
-      tagElement.textContent = tag;
-      tagsContainer.appendChild(tagElement);
+    testimonySnapshot.forEach(doc => {
+      const testimonyData = doc.data();
+      console.log('Testimony data:', testimonyData); // Log the testimony data
+      testimonyText.innerHTML = testimonyData.testimony; // Use innerHTML to render HTML content
+      console.log('Testimony displayed:', testimonyText.innerHTML); // Log the displayed testimony
     });
+  } catch (error) {
+    console.error('Error loading testimony:', error);
+    testimonyText.textContent = 'Error loading testimony.';
   }
+}
 
-  function fetchUserProfile(username) {
-    const usersRef = db.collection('users');
-    usersRef.where('username', '==', username).get()
-      .then((querySnapshot) => {
-        if (!querySnapshot.empty) {
-          const userDoc = querySnapshot.docs[0];
-          const userData = userDoc.data();
-          const testimonyId = userDoc.id;
-
-          document.getElementById('testimonyTitle').textContent = userData.title || 'Not available yet';
-          document.getElementById('testimonyText').textContent = userData.testimony || 'Not available yet';
-          document.getElementById('testimonyAuthor').innerHTML = `By: <a href="/profile/${userData.username}">${userData.username}</a>`;
-          displayTags(userData.tags || []);
-
-          if (userData.lastEdited) {
-            const lastEditedDate = new Date(userData.lastEdited.seconds * 1000);
-            document.getElementById('lastEdited').textContent = `Last edited on: ${lastEditedDate.toLocaleString()}`;
-          }
-
-          if (auth.currentUser && auth.currentUser.uid === userDoc.id) {
-            document.getElementById('editButton').classList.remove('hidden');
-            document.getElementById('editButton').addEventListener('click', () => {
-              document.getElementById('testimonyText').classList.add('hidden');
-              document.getElementById('testimonyBox').classList.add('hidden');
-              document.getElementById('editTestimony').classList.remove('hidden');
-              document.getElementById('editTestimony').value = userData.testimony || '';
-              document.getElementById('editTitle').classList.remove('hidden');
-              document.getElementById('editTitle').value = userData.title || '';
-              document.getElementById('tagContainer').classList.remove('hidden');
-              document.getElementById('tagInput').value = userData.tags ? userData.tags.join(', ') : '';
-              updateFormTags();
-              document.getElementById('saveButton').classList.remove('hidden');
-              document.getElementById('cancelButton').classList.remove('hidden');
-            });
-
-            document.getElementById('saveButton').addEventListener('click', async () => {
-              const newTestimony = document.getElementById('editTestimony').value;
-              const newTitle = document.getElementById('editTitle').value;
-              const newTags = document.getElementById('tagInput').value.split(',').map(tag => tag.trim()).filter(tag => tag).slice(0, 3);
-              if (validateForm(newTestimony) && validateForm(newTitle) && newTags.every(tag => validateForm(tag))) {
-                await db.collection('users').doc(auth.currentUser.uid).update({
-                  testimony: newTestimony,
-                  title: newTitle,
-                  tags: newTags,
-                  lastEdited: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                document.getElementById('testimonyText').textContent = newTestimony || 'Not available yet';
-                document.getElementById('testimonyTitle').textContent = newTitle || 'Not available yet';
-                displayTags(newTags);
-                document.getElementById('testimonyText').classList.remove('hidden');
-                document.getElementById('testimonyBox').classList.remove('hidden');
-                document.getElementById('editTestimony').classList.add('hidden');
-                document.getElementById('editTitle').classList.add('hidden');
-                document.getElementById('tagContainer').classList.add('hidden');
-                document.getElementById('saveButton').classList.add('hidden');
-                document.getElementById('cancelButton').classList.add('hidden');
-              }
-            });
-
-            document.getElementById('cancelButton').addEventListener('click', () => {
-              document.getElementById('testimonyText').classList.remove('hidden');
-              document.getElementById('testimonyBox').classList.remove('hidden');
-              document.getElementById('editTestimony').classList.add('hidden');
-              document.getElementById('editTitle').classList.add('hidden');
-              document.getElementById('tagContainer').classList.add('hidden');
-              document.getElementById('saveButton').classList.add('hidden');
-              document.getElementById('cancelButton').classList.add('hidden');
-            });
-          } else {
-            document.getElementById('editButton').classList.add('hidden');
-            document.getElementById('saveButton').classList.add('hidden');
-            document.getElementById('cancelButton').classList.add('hidden');
-          }
-
-          displayComments(testimonyId);
-
-          document.getElementById('postComment').addEventListener('click', async () => {
-            const newComment = document.getElementById('newComment').value;
-            if (newComment.trim() !== '') {
-              if (validateForm(newComment)) {
-                const commentAuthor = auth.currentUser ? userData.username : 'Anonymous';
-                await db.collection('comments').add({
-                  testimonyId: testimonyId,
-                  author: commentAuthor,
-                  text: newComment,
-                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                document.getElementById('newComment').value = '';
-              }
-            }
-          });
-        } else {
-          document.getElementById('testimonyText').textContent = 'No testimony found for this user.';
-          console.log("No testimony found for this user.");
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching testimony:', error);
-      });
+function displayTestimony(testimony) {
+  elements.title.textContent = testimony.title || '';
+  elements.text.textContent = testimony.text || '';
+  elements.author.textContent = `Posted by: ${testimony.author || 'Anonymous'}`;
+  
+  if (elements.editTextarea) {
+    elements.editTextarea.value = testimony.text || '';
   }
+}
 
-  auth.onAuthStateChanged((user) => {
-    updateNavLinks(user);
-
-    const username = getUsernameFromPath();
-
-    if (username) {
-      fetchUserProfile(username);
-    } else {
-      document.getElementById('testimonyText').textContent = 'No username specified.';
-    }
-  });
-
-  const searchButton = document.getElementById('searchButton');
-  if (searchButton) {
-    searchButton.addEventListener('click', () => {
-      window.location.href = '/search/index.html';
-    });
-  }
-});
-
+// Comment Management Functions
 function displayComments(testimonyId) {
-  const commentList = document.getElementById('commentList');
-  db.collection('comments').where('testimonyId', '==', testimonyId)
+  db.collection('comments')
+    .where('testimonyId', '==', testimonyId)
     .orderBy('timestamp', 'desc')
     .onSnapshot((snapshot) => {
-      commentList.innerHTML = '';
+      elements.commentList.innerHTML = '';
       snapshot.forEach((doc) => {
         const comment = doc.data();
-        const commentDiv = document.createElement('div');
-        commentDiv.classList.add('comment');
-        commentDiv.innerHTML = `
-          <div class="comment-author"><a href="/profile/${comment.author}">${comment.author}</a></div>
-          <div class="comment-text">${comment.text}</div>
-        `;
-        commentList.appendChild(commentDiv);
+        appendCommentToDOM(comment);
       });
     });
 }
 
-document.getElementById('tagInput').addEventListener('input', updateFormTags);
+function appendCommentToDOM(comment) {
+  const commentDiv = document.createElement('div');
+  commentDiv.classList.add('comment');
+  commentDiv.innerHTML = `
+    <div class="comment-author">
+      <a href="/profile/${comment.author}">${comment.author}</a>
+    </div>
+    <div class="comment-text">${comment.text}</div>
+  `;
+  elements.commentList.appendChild(commentDiv);
+}
 
-document.getElementById('branding').addEventListener('click', () => {
-  window.location.href = '../index';
+async function postComment(testimonyId) {
+  const commentText = elements.newComment.value.trim();
+  if (!commentText) return;
+
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      alert('Please log in to comment');
+      return;
+    }
+
+    await db.collection('comments').add({
+      testimonyId,
+      author: user.displayName || user.email,
+      text: commentText,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    elements.newComment.value = '';
+  } catch (error) {
+    console.error('Error posting comment:', error);
+    alert('Failed to post comment');
+  }
+}
+
+// Tag Management Functions
+function updateFormTags() {
+  const tags = elements.tagInput.value
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(tag => tag.length > 0);
+  
+  displayTags(tags);
+}
+
+function displayTags(tags) {
+  elements.tagList.innerHTML = '';
+  tags.forEach(tag => {
+    const tagElement = document.createElement('div');
+    tagElement.classList.add('tag');
+    tagElement.innerHTML = `
+      ${tag}
+      <span onclick="removeTag('${tag}')">&times;</span>
+    `;
+    elements.tagList.appendChild(tagElement);
+  });
+}
+
+// UI Helper Functions
+function setupUserInterface(user) {
+  // Show edit controls if user is the author
+  const isAuthor = testimony.authorId === user.uid;
+  elements.editControls.style.display = isAuthor ? 'block' : 'none';
+}
+
+function showError(message) {
+  // Implement error display logic
+  console.error(message);
+  alert(message);
+}
+
+// Add this function to handle hearts
+async function handleHeart() {
+  if (!currentUser || !testimonyDoc) {
+    alert('Please log in to heart this testimony');
+    return;
+  }
+
+  try {
+    const heartRef = db.collection('hearts').doc(`${testimonyDoc.id}_${currentUser.uid}`);
+    const heartDoc = await heartRef.get();
+
+    if (heartDoc.exists) {
+      // Remove heart
+      await heartRef.delete();
+      await testimonyDoc.ref.update({
+        heartCount: firebase.firestore.FieldValue.increment(-1)
+      });
+    } else {
+      // Add heart
+      await heartRef.set({
+        testimonyId: testimonyDoc.id,
+        userId: currentUser.uid,
+        authorUsername: testimonyDoc.data().authorUsername,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await testimonyDoc.ref.update({
+        heartCount: firebase.firestore.FieldValue.increment(1)
+      });
+    }
+
+    // Update heart button state
+    updateHeartButton();
+  } catch (error) {
+    console.error('Error handling heart:', error);
+    alert('Failed to update heart');
+  }
+}
+
+// Add this function to check and update heart button state
+async function updateHeartButton() {
+  const heartButton = document.getElementById('heartButton');
+  if (!heartButton || !currentUser || !testimonyDoc) return;
+
+  try {
+    const heartRef = await db.collection('hearts')
+      .doc(`${testimonyDoc.id}_${currentUser.uid}`)
+      .get();
+
+    heartButton.innerHTML = `
+      <i class="fas fa-heart${heartRef.exists ? ' text-danger' : ''}"></i>
+      Heart${heartRef.exists ? 'ed' : ''} (${testimonyDoc.data().heartCount || 0})
+    `;
+    heartButton.classList.toggle('hearted', heartRef.exists);
+  } catch (error) {
+    console.error('Error updating heart button:', error);
+  }
+}
+
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    console.log('User is authenticated:', user); // Log user info
+    await loadTestimony(); // Call loadTestimony only if the user is authenticated
+  } else {
+    console.log('User is not authenticated');
+    window.location.href = '../login/index.html'; // Redirect to login if not authenticated
+  }
 });

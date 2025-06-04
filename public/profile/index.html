@@ -5,132 +5,151 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile - Testimony Land</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
   <header>
     <div class="container">
-      <div id="headerContent">
-        <div id="branding">
-          <img src="../assets/logo-500x200.png" alt="Testimony Land Logo">
-        </div>
-        <nav>
-          <ul id="navLinks">
-            <!-- Navigation links will be dynamically updated by JavaScript -->
-          </ul>
-        </nav>
+      <div id="branding">
+        <img src="../assets/logo-500x200.png" alt="Testimony Land Logo">
       </div>
+      <nav>
+        <ul id="navLinks"></ul>
+      </nav>
     </div>
   </header>
 
-  <section id="profile">
-    <div class="container">
-      <h1>Profile</h1>
-      <div id="profileInfo">
-        <p><strong>Username:</strong> <span id="profileUsername"></span></p>
-        <p><strong>Email:</strong> <span id="profileEmail"></span></p>
-        <p><strong>Name:</strong> <span id="profileName"></span></p>
-        <p><strong>Gender:</strong> <span id="profileGender"></span></p>
-        <p><strong>Social Media:</strong> <span id="profileSocialMedia"></span></p>
-        <p><strong>Denomination:</strong> <span id="profileDenomination"></span></p>
-        <p><strong>Hearts:</strong> <span id="heartCount">0</span></p>
-        <button id="heartButton">Heart</button>
+  <main class="profile-container">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar"></div>
+      <div class="profile-info">
+        <h1 class="profile-name" id="profileName"></h1>
+        <p class="profile-username" id="profileUsername"></p>
+        <div class="profile-actions" id="profileActions">
+          <!-- Actions will be added dynamically -->
+        </div>
       </div>
-      <button id="editProfileButton" class="hidden">Edit Profile</button>
-      <button id="editSettingsButton" class="hidden">Edit Settings</button>
     </div>
-  </section>
 
-  <section id="editProfile" class="hidden">
-    <div class="container">
-      <h2>Edit Profile</h2>
-      <form id="editProfileForm">
-        <label for="editName">Name:</label>
-        <input type="text" id="editName" placeholder="Your Name">
-        <div class="checkbox-container">
-          <label for="showName" class="checkbox-label">
-            <input type="checkbox" id="showName">
-            Show Name
-          </label>
+    <div id="profileContent">
+      <!-- Profile content will be loaded here -->
+    </div>
+
+    <div id="editForm" class="edit-form" style="display: none;">
+      <div class="form-group">
+        <label for="editName">Name</label>
+        <input type="text" id="editName" required>
+      </div>
+
+      <div class="form-group">
+        <label for="editBio">Bio</label>
+        <textarea id="editBio" placeholder="Tell us about yourself..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="editAge">Age</label>
+        <input type="number" id="editAge" min="13" max="120">
+        <div class="checkbox-group">
+          <input type="checkbox" id="editShowAge">
+          <label for="editShowAge">Show Age</label>
         </div>
-        <label for="editEmail">Email:</label>
-        <input type="text" id="editEmail" placeholder="Your Email">
-        <div class="checkbox-container">
-          <label for="showEmail" class="checkbox-label">
-            <input type="checkbox" id="showEmail">
-            Show Email
-          </label>
-        </div>
-        <label for="editGender">Gender:</label>
+      </div>
+
+      <div class="form-group">
+        <label for="editGender">Gender</label>
         <select id="editGender">
+          <option value="">Prefer not to say</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
           <option value="Other">Other</option>
         </select>
-        <label for="editSocialMediaType">Social Media Type:</label>
-        <select id="editSocialMediaType">
-          <option value="None">None</option>
-          <option value="Instagram">Instagram</option>
-          <option value="Github">Github</option>
-          <option value="Linktree">Linktree</option>
-          <option value="X">X</option>
+        <div class="checkbox-group">
+          <input type="checkbox" id="editShowGender">
+          <label for="editShowGender">Show Gender</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="editDenomination">Denomination</label>
+        <select id="editDenomination">
+          <option value="">Select denomination...</option>
+          <option value="Catholic">Catholic</option>
+          <option value="Protestant">Protestant</option>
+          <option value="Orthodox">Orthodox</option>
+          <option value="Baptist">Baptist</option>
+          <option value="Methodist">Methodist</option>
+          <option value="Lutheran">Lutheran</option>
+          <option value="Presbyterian">Presbyterian</option>
+          <option value="Pentecostal">Pentecostal</option>
+          <option value="Evangelical">Evangelical</option>
+          <option value="Other">Other</option>
         </select>
-        <label for="editSocialMedia">Social Media Username:</label>
-        <input type="text" id="editSocialMedia" placeholder="Username">
-        <label for="editDenomination">Denomination:</label>
-        <select id="editDenomination"></select>
-        <button type="submit">Save</button>
-        <button type="button" id="cancelEditProfile">Cancel</button>
-      </form>
-    </div>
-  </section>
+        <div class="checkbox-group">
+          <input type="checkbox" id="editShowDenomination">
+          <label for="editShowDenomination">Show Denomination</label>
+        </div>
+      </div>
 
-  <section id="editSettings" class="hidden">
-    <div class="container">
-      <h2>Edit Settings</h2>
-      <form id="editSettingsForm">
-        <div class="checkbox-container">
-          <label for="changeUsername" class="checkbox-label">
-            <input type="checkbox" id="changeUsername">
-            Change Username
-          </label>
-        </div>
-        <div class="checkbox-container">
-          <label for="changePassword" class="checkbox-label">
-            <input type="checkbox" id="changePassword">
-            Change Password
-          </label>
-        </div>
-        <div id="usernameSection" class="hidden">
-          <label for="editUsername">New Username:</label>
-          <input type="text" id="editUsername" placeholder="New Username">
-          <button type="button" id="checkUsernameAvailability">Check Availability</button>
-          <p id="usernameAvailability"></p>
-        </div>
-        <label for="currentPassword">Current Password:</label>
-        <input type="password" id="currentPassword" placeholder="Current Password" required>
-        <div id="passwordSection" class="hidden">
-          <label for="password">New Password:</label>
-          <input type="password" id="password" name="password">
-          <small id="password-strength"></small>
-          <label for="confirmPassword">Confirm Password:</label>
-          <input type="password" id="confirmPassword" name="confirmPassword">
-          <div class="password-checklist">
-            <ul>
-              <li id="lowercase">• One lowercase character</li>
-              <li id="uppercase">• One uppercase character</li>
-              <li id="number">• One number</li>
-              <li id="length">• 8 characters minimum</li>
-            </ul>
-          </div>
-          <p id="passwordMatch"></p>
-        </div>
-        <button type="submit">Save</button>
-        <button type="button" id="cancelEditSettings">Cancel</button>
-      </form>
-    </div>
-  </section>
+      <div class="form-group">
+        <label for="editSocialMediaType">Social Media Platform</label>
+        <select id="editSocialMediaType">
+          <option value="">None</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Twitter">Twitter</option>
+          <option value="GitHub">GitHub</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Facebook">Facebook</option>
+          <option value="YouTube">YouTube</option>
+          <option value="TikTok">TikTok</option>
+        </select>
+      </div>
 
-  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+      <div class="form-group">
+        <label for="editSocialMedia">Social Media Username</label>
+        <input type="text" id="editSocialMedia" placeholder="Your username">
+      </div>
+
+      <div class="form-group">
+        <label>Privacy Settings</label>
+        <div class="checkbox-group">
+          <input type="checkbox" id="editPrivateProfile">
+          <label for="editPrivateProfile">Private Profile</label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="cancel-button" id="cancelEdit">Cancel</button>
+        <button class="save-button" id="saveProfile">Save Changes</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="privateSection" class="private-section" style="display: none;">
+    <h3 class="label">Private Profile</h3>
+    <p class="content">This profile is private. Only you can see this information.</p>
+  </div>
+
+  <div class="info-card" style="display: none;">
+    <label class="label">Bio</label>
+    <div class="content">${userData.bio || 'No bio added yet'}</div>
+  </div>
+
+  <div class="info-card" style="display: none;">
+    <label class="label">Age</label>
+    <div class="content">${userData.age}</div>
+  </div>
+
+  <div class="info-card" style="display: none;">
+    <label class="label">Gender</label>
+    <div class="content">${userData.gender}</div>
+  </div>
+
+  <div class="info-card" style="display: none;">
+    <label class="label">Denomination</label>
+    <div class="content">${userData.denomination}</div>
+  </div>
+
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>

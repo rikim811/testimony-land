@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const userId = 'Dju1URXVRKYFFYm4E2QaLexaJqT2'; // Moderator user ID
+  const userId = 'tkSubesXb8XYvdaKW2JmU8iwWUI3'; // Moderator user ID
   const userList = document.getElementById('userList');
   const searchResults = document.getElementById('searchResults');
 
@@ -36,17 +36,22 @@ document.addEventListener('DOMContentLoaded', () => {
   async function searchUsersByField(field, query) {
     try {
       const usersRef = db.collection('users');
-      let querySnapshot;
-      if (field === 'tags') {
-        querySnapshot = await usersRef.where(field, 'array-contains', query).get();
-      } else {
-        querySnapshot = await usersRef.where(field, '==', query).get();
-      }
+      const querySnapshot = await usersRef.get();
       const results = [];
+      
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        results.push(data);
+        const tags = data.tags ? data.tags.map(tag => tag.toLowerCase()) : [];
+
+        console.log('Checking user:', data.username, 'Tags:', tags); // Debugging log
+
+        if (field === 'tags' && tags.includes(query.toLowerCase())) {
+          results.push(data);
+        } else if (data[field] && data[field].toLowerCase().includes(query.toLowerCase())) {
+          results.push(data);
+        }
       });
+
       displaySearchResults(results);
     } catch (error) {
       console.error(`Error searching users by ${field}:`, error);

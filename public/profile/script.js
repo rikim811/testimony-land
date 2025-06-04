@@ -1,410 +1,351 @@
 document.addEventListener('DOMContentLoaded', () => {
-  let userDataGlobal;
-  let userUidGlobal;
+  const profileAvatar = document.getElementById('profileAvatar');
+  const profileName = document.getElementById('profileName');
+  const profileUsername = document.getElementById('profileUsername');
+  const profileActions = document.getElementById('profileActions');
+  const editForm = document.getElementById('editForm');
+  const profileContent = document.getElementById('profileContent');
 
-  // Function to get the username from the URL path
-  function getUsernameFromPath() {
-    const path = window.location.pathname.split('/');
-    return path[path.length - 1];
+  let currentUser = null;
+  let isOwnProfile = false;
+
+  function getInitials(name) {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
   }
 
-  // Function to update profile display
-  function updateProfileDisplay(userData) {
-    document.getElementById('profileUsername').textContent = userData.username;
-    const profileEmail = document.getElementById('profileEmail');
-    const profileName = document.getElementById('profileName');
-    const profileGender = document.getElementById('profileGender');
-    const profileSocialMedia = document.getElementById('profileSocialMedia');
-    const profileDenomination = document.getElementById('profileDenomination');
-
-    if (profileEmail) {
-      profileEmail.textContent = userData.showEmail ? userData.email : 'Private';
+  function updateProfile(userData) {
+    profileName.textContent = userData.name;
+    profileUsername.textContent = `@${userData.username}`;
+    profileAvatar.textContent = getInitials(userData.name);
+    
+    // Update profile actions
+    profileActions.innerHTML = '';
+    if (isOwnProfile) {
+      profileActions.innerHTML = `
+        <button class="action-button primary-button" id="editProfileBtn">
+          <i class="fas fa-edit"></i> Edit Profile
+        </button>
+      `;
+      document.getElementById('editProfileBtn').addEventListener('click', showEditForm);
     }
 
-    if (profileName) {
-      profileName.textContent = userData.showName ? userData.name : 'Private';
-    }
+    // Only show private profile content to the owner or if profile is not private
+    if (isOwnProfile || !userData.privateProfile) {
+      let contentHTML = `<div class="profile-content-grid">`;
+      
+      // Bio section (full width)
+      contentHTML += `
+        <div class="info-card" style="grid-column: 1 / -1">
+          <label>Bio</label>
+          <div class="content">${userData.bio || 'No bio added yet'}</div>
+        </div>
+      `;
 
-    if (profileGender) {
-      profileGender.textContent = userData.gender || 'Not Available';
-    }
+      // Personal info cards
+      if (userData.showAge && userData.age) {
+        contentHTML += `
+          <div class="info-card">
+            <label>Age</label>
+            <div class="content">${userData.age}</div>
+          </div>
+        `;
+      }
 
-    if (profileSocialMedia) {
+      if (userData.showGender && userData.gender) {
+        contentHTML += `
+          <div class="info-card">
+            <label>Gender</label>
+            <div class="content">${userData.gender}</div>
+          </div>
+        `;
+      }
+
+      if (userData.showDenomination && userData.denomination) {
+        contentHTML += `
+          <div class="info-card">
+            <label>Denomination</label>
+            <div class="content">${userData.denomination}</div>
+          </div>
+        `;
+      }
+
+      // Social media card
       if (userData.socialMediaType && userData.socialMedia) {
-        let prefix;
-        switch (userData.socialMediaType) {
-          case 'Instagram':
-            prefix = 'https://instagram.com/';
-            break;
-          case 'Github':
-            prefix = 'https://github.com/';
-            break;
-          case 'Linktree':
-            prefix = 'https://linktr.ee/';
-            break;
-          case 'X':
-            prefix = 'https://x.com/';
-            break;
-        }
-        profileSocialMedia.innerHTML = `<a href="${prefix}${userData.socialMedia}" target="_blank">${prefix}${userData.socialMedia}</a>`;
-      } else {
-        profileSocialMedia.textContent = 'Not Available';
+        contentHTML += `
+          <div class="info-card">
+            <label>${userData.socialMediaType}</label>
+            <div class="content">
+              <a href="${getSocialMediaLink(userData.socialMediaType, userData.socialMedia)}" 
+                 target="_blank" rel="noopener noreferrer">
+                 @${userData.socialMedia}
+              </a>
+            </div>
+          </div>
+        `;
       }
-    }
 
-    if (profileDenomination) {
-      profileDenomination.textContent = userData.denomination || 'Not Available';
+      // Testimony link card
+      contentHTML += `
+        <div class="info-card">
+          <label>Testimony</label>
+          <div class="content">
+            <a href="../testimony/${userData.username}" class="testimony-link">
+              <i class="fas fa-book-open"></i> View Testimony
+            </a>
+          </div>
+        </div>
+      `;
+
+      contentHTML += `</div>`;
+
+      profileContent.innerHTML = contentHTML;
+
+    } else {
+      profileContent.innerHTML = `
+        <div class="info-card" style="text-align: center;">
+          <i class="fas fa-lock" style="font-size: 2em; color: #546bd6; margin-bottom: 15px;"></i>
+          <p>This profile is private</p>
+        </div>
+      `;
     }
   }
 
-  // Function to fetch user profile data
-  async function fetchUserProfile(profileUsername, user) {
-    const usersRef = db.collection('users');
-    try {
-      const querySnapshot = await usersRef.where('username', '==', profileUsername).get();
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
-        userDataGlobal = userData;
-        userUidGlobal = userDoc.id;
-        updateProfileDisplay(userData);
-
-        if (user && user.uid === userDoc.id) {
-          document.getElementById('editProfileButton').classList.remove('hidden');
-          document.getElementById('editSettingsButton').classList.remove('hidden');
-        }
-
-        // Display heart count
-        document.getElementById('heartCount').textContent = userData.hearts || 0;
-
-        // Check if the current user has hearted this profile
-        if (user) {
-          const heartedSnapshot = await db.collection('hearts').where('profileId', '==', userDoc.id).where('userId', '==', user.uid).get();
-          if (!heartedSnapshot.empty) {
-            document.getElementById('heartButton').textContent = 'Unheart';
-          }
-        }
-      } else {
-        document.getElementById('profileInfo').innerHTML = '<p>No profile found for this user.</p>';
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
+  function getSocialMediaLink(platform, username) {
+    const platforms = {
+      'Instagram': `https://instagram.com/${username}`,
+      'Twitter': `https://twitter.com/${username}`,
+      'GitHub': `https://github.com/${username}`,
+      'LinkedIn': `https://linkedin.com/in/${username}`,
+      'Facebook': `https://facebook.com/${username}`,
+      'YouTube': `https://youtube.com/@${username}`,
+      'TikTok': `https://tiktok.com/@${username}`
+    };
+    return platforms[platform] || '#';
   }
 
-  auth.onAuthStateChanged((user) => {
-    const profileUsername = getUsernameFromPath();
-    fetchUserProfile(profileUsername, user);
+  function showEditForm() {
+    profileContent.style.display = 'none';
+    editForm.style.display = 'block';
+    
+    // Populate form with current data
+    document.getElementById('editName').value = currentUser.name || '';
+    document.getElementById('editBio').value = currentUser.bio || '';
+    document.getElementById('editAge').value = currentUser.age || '';
+    document.getElementById('editGender').value = currentUser.gender || '';
+    document.getElementById('editDenomination').value = currentUser.denomination || '';
+    document.getElementById('editSocialMediaType').value = currentUser.socialMediaType || '';
+    document.getElementById('editSocialMedia').value = currentUser.socialMedia || '';
+    
+    // Checkboxes
+    document.getElementById('editShowAge').checked = currentUser.showAge || false;
+    document.getElementById('editShowGender').checked = currentUser.showGender || false;
+    document.getElementById('editShowDenomination').checked = currentUser.showDenomination || false;
+    document.getElementById('editPrivateProfile').checked = currentUser.privateProfile || false;
+  }
 
-    const editProfileButton = document.getElementById('editProfileButton');
-    if (editProfileButton) {
-      editProfileButton.addEventListener('click', () => {
-        document.getElementById('profile').classList.add('hidden');
-        document.getElementById('editProfile').classList.remove('hidden');
-
-        // Pre-fill form with existing data
-        db.collection('users').where('username', '==', profileUsername).get().then((querySnapshot) => {
-          if (!querySnapshot.empty) {
-            const userDoc = querySnapshot.docs[0];
-            const userData = userDoc.data();
-            document.getElementById('editName').value = userData.name || '';
-            document.getElementById('showName').checked = userData.showName || false;
-            document.getElementById('editEmail').value = userData.email || '';
-            document.getElementById('showEmail').checked = userData.showEmail || false;
-            document.getElementById('editGender').value = userData.gender || '';
-            document.getElementById('editSocialMediaType').value = userData.socialMediaType || 'None';
-            updateSocialMediaPlaceholder(userData.socialMediaType, userData.socialMedia || '');
-            document.getElementById('editDenomination').value = userData.denomination || '';
-          }
-        });
-      });
-    }
-
-    const cancelEditProfileButton = document.getElementById('cancelEditProfile');
-    if (cancelEditProfileButton) {
-      cancelEditProfileButton.addEventListener('click', () => {
-        document.getElementById('editProfile').classList.add('hidden');
-        document.getElementById('profile').classList.remove('hidden');
-      });
-    }
-
-    const editProfileForm = document.getElementById('editProfileForm');
-    if (editProfileForm) {
-      editProfileForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newName = document.getElementById('editName').value;
-        const showName = document.getElementById('showName').checked;
-        const newEmail = document.getElementById('editEmail').value;
-        const showEmail = document.getElementById('showEmail').checked;
-        const newGender = document.getElementById('editGender').value;
-        const newSocialMediaType = document.getElementById('editSocialMediaType').value;
-        const newSocialMedia = document.getElementById('editSocialMedia').value.replace(/^(https:\/\/instagram\.com\/|https:\/\/github\.com\/|https:\/\/linktr\.ee\/|https:\/\/x\.com\/)/, '');
-        const newDenomination = document.getElementById('editDenomination').value;
-
-        const userDoc = db.collection('users').doc(user.uid);
-        userDoc.update({
-          name: newName,
-          showName: showName,
-          email: newEmail,
-          showEmail: showEmail,
-          gender: newGender,
-          socialMediaType: newSocialMediaType,
-          socialMedia: newSocialMedia,
-          denomination: newDenomination
-        }).then(() => {
-          document.getElementById('editProfile').classList.add('hidden');
-          document.getElementById('profile').classList.remove('hidden');
-          fetchUserProfile(getUsernameFromPath(), user);
-        }).catch((error) => {
-          console.error('Error updating profile:', error);
-        });
-      });
-    }
-
-    const editSettingsButton = document.getElementById('editSettingsButton');
-    if (editSettingsButton) {
-      editSettingsButton.addEventListener('click', () => {
-        document.getElementById('profile').classList.add('hidden');
-        document.getElementById('editSettings').classList.remove('hidden');
-      });
-    }
-
-    const cancelEditSettingsButton = document.getElementById('cancelEditSettings');
-    if (cancelEditSettingsButton) {
-      cancelEditSettingsButton.addEventListener('click', () => {
-        document.getElementById('editSettings').classList.add('hidden');
-        document.getElementById('profile').classList.remove('hidden');
-      });
-    }
-
-    const editSettingsForm = document.getElementById('editSettingsForm');
-    if (editSettingsForm) {
-      editSettingsForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newUsername = document.getElementById('editUsername').value;
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        // Reauthenticate user
-        const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
-        user.reauthenticateWithCredential(credential).then(() => {
-          if (newUsername) {
-            db.collection('users').doc(user.uid).update({
-              username: newUsername,
-            }).then(() => {
-              window.location.href = `/profile/${newUsername}`;
-            }).catch((error) => {
-              console.error('Error updating username:', error);
-            });
-          }
-
-          if (newPassword && newPassword === confirmPassword) {
-            user.updatePassword(newPassword).then(() => {
-              document.getElementById('editSettingsForm').classList.add('hidden');
-              document.getElementById('profile').classList.remove('hidden');
-            }).catch((error) => {
-              console.error('Error updating password:', error);
-            });
-          }
-        }).catch((error) => {
-          console.error('Error reauthenticating:', error);
-        });
-      });
-    }
-
-    const checkUsernameAvailabilityButton = document.getElementById('checkUsernameAvailability');
-    if (checkUsernameAvailabilityButton) {
-      checkUsernameAvailabilityButton.addEventListener('click', async () => {
-        const newUsername = document.getElementById('editUsername').value;
-        if (newUsername) {
-          const usersRef = db.collection('users');
-          const querySnapshot = await usersRef.where('username', '==', newUsername).get();
-          const usernameAvailability = document.getElementById('usernameAvailability');
-          if (querySnapshot.empty) {
-            usernameAvailability.textContent = 'Username is available';
-            usernameAvailability.style.color = 'green';
-          } else {
-            usernameAvailability.textContent = 'Username is taken';
-            usernameAvailability.style.color = 'red';
-          }
-        }
-      });
-    }
-
-    const heartButton = document.getElementById('heartButton');
-    if (heartButton) {
-      heartButton.addEventListener('click', async () => {
-        if (user) {
-          const heartsRef = db.collection('hearts');
-          const userHeartSnapshot = await heartsRef.where('profileId', '==', userUidGlobal).where('userId', '==', user.uid).get();
-          if (userHeartSnapshot.empty) {
-            // Add heart
-            await heartsRef.add({
-              profileId: userUidGlobal,
-              userId: user.uid,
-            });
-            await db.collection('users').doc(userUidGlobal).update({
-              hearts: firebase.firestore.FieldValue.increment(1),
-            });
-            document.getElementById('heartButton').textContent = 'Unheart';
-            document.getElementById('heartCount').textContent = parseInt(document.getElementById('heartCount').textContent) + 1;
-          } else {
-            // Remove heart
-            userHeartSnapshot.docs[0].ref.delete();
-            await db.collection('users').doc(userUidGlobal).update({
-              hearts: firebase.firestore.FieldValue.increment(-1),
-            });
-            document.getElementById('heartButton').textContent = 'Heart';
-            document.getElementById('heartCount').textContent = parseInt(document.getElementById('heartCount').textContent) - 1;
-          }
-        } else {
-          alert('You must be logged in to heart profiles.');
-        }
-      });
-    }
-
-    updateNavLinks(user);
+  // Add event listeners for edit form
+  document.getElementById('cancelEdit').addEventListener('click', () => {
+    editForm.style.display = 'none';
+    profileContent.style.display = 'block';
   });
 
-  async function loadDenominations() {
+  // Update the age input validation
+  const ageInput = document.getElementById('editAge');
+  ageInput.addEventListener('change', (e) => {
+    let value = parseInt(e.target.value);
+    if (value && value < 13) {
+      e.target.value = 13;
+    } else if (value && value > 120) {
+      e.target.value = 120;
+    }
+  });
+
+  // Add validation for username
+  const usernameInput = document.getElementById('editUsername');
+  if (usernameInput) { // Only if username is editable
+    usernameInput.addEventListener('input', (e) => {
+      const value = e.target.value;
+      const regex = /^[a-zA-Z0-9]{3,}$/;
+      
+      if (!regex.test(value)) {
+        usernameInput.classList.add('invalid');
+        document.getElementById('usernameError').textContent = 
+          'Username must be at least 3 characters and contain only letters and numbers';
+      } else {
+        usernameInput.classList.remove('invalid');
+        document.getElementById('usernameError').textContent = '';
+      }
+    });
+  }
+
+  // Update the save profile function to include validation
+  document.getElementById('saveProfile').addEventListener('click', async () => {
+    const name = document.getElementById('editName').value.trim();
+    const age = parseInt(document.getElementById('editAge').value);
+    
+    if (!name) {
+      alert('Name is required');
+      return;
+    }
+
+    if (age && (age < 13 || age > 120)) {
+      alert('Age must be between 13 and 120');
+      return;
+    }
+
+    const updates = {
+      name: name,
+      bio: document.getElementById('editBio').value.trim(),
+      age: age || null,
+      gender: document.getElementById('editGender').value,
+      denomination: document.getElementById('editDenomination').value,
+      socialMediaType: document.getElementById('editSocialMediaType').value,
+      socialMedia: document.getElementById('editSocialMedia').value.trim(),
+      showAge: document.getElementById('editShowAge').checked,
+      showGender: document.getElementById('editShowGender').checked,
+      showDenomination: document.getElementById('editShowDenomination').checked,
+      privateProfile: document.getElementById('editPrivateProfile').checked,
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
     try {
-      const response = await fetch('../denominations.json'); // Ensure the correct path to the JSON file
-      const data = await response.json();
-      const denominations = data.dominations;
-      const editDenominationSelect = document.getElementById('editDenomination');
-
-      denominations.forEach(denomination => {
-        const option = document.createElement('option');
-        option.value = denomination;
-        option.textContent = denomination;
-        editDenominationSelect.appendChild(option);
-      });
-
-      const nonDenominationOption = document.createElement('option');
-      nonDenominationOption.value = 'Non Denomination';
-      nonDenominationOption.textContent = 'Non Denomination';
-      editDenominationSelect.appendChild(nonDenominationOption);
+      await db.collection('users').doc(currentUser.uid).update(updates);
+      currentUser = { ...currentUser, ...updates };
+      
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.className = 'success-message';
+      successMessage.innerHTML = '<i class="fas fa-check-circle"></i> Profile updated successfully!';
+      editForm.insertBefore(successMessage, editForm.firstChild);
+      
+      setTimeout(() => {
+        successMessage.remove();
+        editForm.style.display = 'none';
+        profileContent.style.display = 'block';
+        updateProfile(currentUser);
+      }, 1500);
     } catch (error) {
-      console.error('Error fetching denominations:', error);
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    }
+  });
+
+  // Add this function to handle navigation links
+  function updateNavLinks(user) {
+    const navLinks = document.getElementById('navLinks');
+    if (user) {
+      navLinks.innerHTML = `
+        <li><a href="../testimony/${user.username}">Testimony</a></li>
+        <li><a href="../profile/${user.username}">Profile</a></li>
+        <li><a href="../search/index.html">Search</a></li>
+        <li><a href="#" id="logoutButton">Logout</a></li>
+      `;
+      document.getElementById('logoutButton').addEventListener('click', () => {
+        auth.signOut().then(() => {
+          window.location.href = '../login/index.html';
+        });
+      });
+    } else {
+      navLinks.innerHTML = `
+        <li><a href="../signup/index.html">Sign Up</a></li>
+        <li><a href="../login/index.html">Login</a></li>
+        <li><a href="../search/index.html">Search</a></li>
+      `;
     }
   }
 
-  function updateSocialMediaPlaceholder(selectedType, username = '') {
-    const socialMediaInput = document.getElementById('editSocialMedia');
-    let prefix;
-    switch (selectedType) {
-      case 'Instagram':
-        prefix = 'https://instagram.com/';
-        break;
-      case 'Github':
-        prefix = 'https://github.com/';
-        break;
-      case 'Linktree':
-        prefix = 'https://linktr.ee/';
-        break;
-      case 'X':
-        prefix = 'https://x.com/';
-        break;
-      default:
-        prefix = '';
-    }
+  // Initialize profile
+  const urlUsername = window.location.pathname.split('/').pop();
+  
+  async function loadPrivateTestimonyLink() {
+    if (!currentUser) return;
 
-    socialMediaInput.placeholder = prefix;
-    socialMediaInput.disabled = selectedType === 'None';
-    socialMediaInput.value = username ? username.replace(prefix, '') : ''; // Set only the username part if provided
-  }
+    try {
+      const testimonySnapshot = await db.collection('testimonies')
+        .where('authorUsername', '==', currentUser.username)
+        .where('isPrivate', '==', true)
+        .limit(1)
+        .get();
 
-  const socialMediaTypeSelect = document.getElementById('editSocialMediaType');
-  if (socialMediaTypeSelect) {
-    socialMediaTypeSelect.addEventListener('change', () => {
-      const selectedType = socialMediaTypeSelect.value;
-      updateSocialMediaPlaceholder(selectedType);
-    });
-  }
+      const privateLinkSection = document.getElementById('privateLinkSection');
+      const privateLinkInput = document.getElementById('privateLink');
+      
+      if (!testimonySnapshot.empty) {
+        const testimony = testimonySnapshot.docs[0].data();
+        if (testimony.privateLink) {
+          privateLinkInput.value = `${window.location.origin}/t/${testimony.privateLink}`;
+          privateLinkSection.style.display = 'block';
 
-  const changeUsernameCheckbox = document.getElementById('changeUsername');
-  const changePasswordCheckbox = document.getElementById('changePassword');
-  const usernameSection = document.getElementById('usernameSection');
-  const passwordSection = document.getElementById('passwordSection');
-
-  if (changeUsernameCheckbox) {
-    changeUsernameCheckbox.addEventListener('change', () => {
-      usernameSection.classList.toggle('hidden', !changeUsernameCheckbox.checked);
-    });
-  }
-
-  if (changePasswordCheckbox) {
-    changePasswordCheckbox.addEventListener('change', () => {
-      passwordSection.classList.toggle('hidden', !changePasswordCheckbox.checked);
-    });
-  }
-
-  loadDenominations();
-});
-
-function updateNavLinks(user) {
-  const navLinks = document.getElementById('navLinks');
-  navLinks.innerHTML = '';
-
-  if (user) {
-    db.collection('users').doc(user.uid).get().then((doc) => {
-      if (doc.exists) {
-        const userData = doc.data();
-        const username = userData.username || user.email.split('@')[0];
-        navLinks.innerHTML = `
-          <li><a href="/testimony/${username}">Testimony</a></li>
-          <li><a href="/profile/${username}">Profile</a></li>
-          <li><a href="/search/index.html">Search</a></li>
-          <li><a href="#" id="logoutButton">Logout</a></li>
-        `;
-        const logoutButton = document.getElementById('logoutButton');
-        if (logoutButton) {
-          logoutButton.addEventListener('click', () => {
-            auth.signOut().then(() => {
-              window.location.href = '/login/index.html';
-            });
+          // Add copy functionality
+          document.getElementById('copyPrivateLink').addEventListener('click', () => {
+            privateLinkInput.select();
+            document.execCommand('copy');
+            
+            // Show success message
+            const button = document.getElementById('copyPrivateLink');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            button.style.background = '#28a745';
+            
+            setTimeout(() => {
+              button.innerHTML = originalText;
+              button.style.background = '';
+            }, 2000);
           });
         }
+      } else {
+        privateLinkSection.style.display = 'none';
       }
-    }).catch((error) => {
-      console.error('Error fetching user data:', error);
-    });
-  } else {
-    navLinks.innerHTML = `
-      <li><a href="/signup/index.html">Sign Up</a></li>
-      <li><a href="/login/index.html">Login</a></li>
-      <li><a href="/search/index.html">Search</a></li>
-    `;
+    } catch (error) {
+      console.error('Error loading private testimony link:', error);
+    }
   }
-}
 
-const searchButton = document.getElementById('searchButton');
-if (searchButton) {
-  searchButton.addEventListener('click', () => {
-    window.location.href = '/search/index.html';
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      // Get current user data
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        currentUser = { uid: user.uid, ...userDoc.data() };
+        isOwnProfile = currentUser.username === urlUsername;
+        
+        // Get profile data for the URL username
+        const profileQuery = await db.collection('users')
+          .where('username', '==', urlUsername)
+          .limit(1)
+          .get();
+
+        if (!profileQuery.empty) {
+          const profileData = profileQuery.docs[0].data();
+          updateProfile(profileData);
+        } else {
+          // Handle profile not found
+          profileContent.innerHTML = '<p>Profile not found</p>';
+        }
+        
+        updateNavLinks(currentUser);
+        if (isOwnProfile) {
+          await loadPrivateTestimonyLink();
+        }
+      }
+    } else {
+      // Handle not logged in state
+      const profileQuery = await db.collection('users')
+        .where('username', '==', urlUsername)
+        .limit(1)
+        .get();
+
+      if (!profileQuery.empty) {
+        const profileData = profileQuery.docs[0].data();
+        updateProfile(profileData);
+      } else {
+        profileContent.innerHTML = '<p>Profile not found</p>';
+      }
+      updateNavLinks(null);
+    }
   });
-}
-
-// Redirect to index on logo click
-document.getElementById('branding').addEventListener('click', () => {
-  window.location.href = '../index';
-});
-
-document.getElementById('password').addEventListener('input', function() {
-  const password = this.value;
-
-  document.getElementById('lowercase').style.color = /[a-z]/.test(password) ? 'green' : 'red';
-  document.getElementById('uppercase').style.color = /[A-Z]/.test(password) ? 'green' : 'red';
-  document.getElementById('number').style.color = /[0-9]/.test(password) ? 'green' : 'red';
-  document.getElementById('length').style.color = password.length >= 8 ? 'green' : 'red';
-});
-
-document.getElementById('confirmPassword').addEventListener('input', function() {
-  if (this.value !== document.getElementById('password').value) {
-    document.getElementById('passwordMatch').textContent = 'Passwords do not match';
-    document.getElementById('passwordMatch').style.color = 'red';
-  } else {
-    document.getElementById('passwordMatch').textContent = '';
-  }
 });

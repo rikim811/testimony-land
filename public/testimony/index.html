@@ -5,54 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Testimony - Testimony Land</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
   <header>
-    <div class="container" id="headerContent">
+    <div class="container">
       <div id="branding">
         <img src="../assets/logo-500x200.png" alt="Testimony Land Logo">
       </div>
       <nav>
-        <ul id="navLinks">
-          <!-- Navigation links will be dynamically updated by JavaScript -->
-        </ul>
+        <ul id="navLinks"></ul>
       </nav>
     </div>
   </header>
 
-  <section id="testimony">
-    <div class="container">
-      <h1 id="testimonyTitle"></h1>
-      <div id="testimonyBox">
-        <p id="testimonyText"></p>
-      </div>
-      <p id="testimonyAuthor"></p>
-      <div id="lastEdited"></div>
-      <div id="testimonyTags" class="tags-container"></div>
-      <input type="text" id="editTitle" class="hidden" placeholder="Title">
-      <textarea id="editTestimony" class="hidden" rows="10" placeholder="Write your testimony..."></textarea>
-      <div id="tagContainer" class="hidden">
-        <input type="text" id="tagInput" placeholder="Add tags (comma separated, max 3)">
-        <div id="tags"></div>
-      </div>
-      <div id="buttonGroup">
-        <button id="editButton" class="hidden">Edit Testimony</button>
-        <button id="saveButton" class="hidden">Save Testimony</button>
-        <button id="cancelButton" class="hidden">Cancel</button>
+  <main class="testimony-container">
+    <div class="testimony-header">
+      <h1 class="testimony-title" id="testimonyTitle"></h1>
+      <div class="testimony-meta">
+        <div class="author-info">
+          <div class="author-avatar" id="authorAvatar"></div>
+          <a href="#" class="author-name" id="authorName"></a>
+        </div>
+        <span class="last-edited" id="lastEdited"></span>
       </div>
     </div>
-  </section>
 
-  <section id="comments">
-    <div class="container">
-      <h2>Comments</h2>
-      <div id="commentList"></div>
-      <textarea id="newComment" rows="3" placeholder="Add a comment..."></textarea>
-      <button id="postComment">Post Comment</button>
+    <div class="testimony-content">
+      <div class="testimony-text" id="testimonyText"></div>
+      <div class="testimony-tags" id="testimonyTags"></div>
+      <div class="testimony-actions">
+        <div class="action-buttons" id="actionButtons">
+          <!-- Action buttons will be added dynamically -->
+        </div>
+        <div class="share-buttons">
+          <button class="action-button secondary-button" id="shareButton">
+            <i class="fas fa-share"></i> Share
+          </button>
+        </div>
+      </div>
     </div>
-  </section>
+  </main>
 
-  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>

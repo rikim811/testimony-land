@@ -5,31 +5,29 @@ document.addEventListener('DOMContentLoaded', () => {
   searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const query = document.getElementById('searchQuery').value.trim().toLowerCase();
-    const type = "profile";
+    const type = "testimony";
 
     if (query) {
       searchResults.innerHTML = 'Searching...';
 
-      const searchRef = type === 'profile' ? db.collection('users') : db.collection('testimonies');
+      const searchRef = db.collection('testimonies');
 
       searchRef.get()
         .then((querySnapshot) => {
           const results = [];
           querySnapshot.forEach((doc) => {
             const data = doc.data();
-
-            const fullName = data.name ? data.name.toLowerCase() : '';
-            const username = data.username ? data.username.toLowerCase() : '';
             const title = data.title ? data.title.toLowerCase() : '';
             const tags = data.tags ? data.tags.map(tag => tag.toLowerCase()) : [];
+            const username = data.authorUsername;
+
+            console.log('Checking testimony:', { title, tags, username });
 
             if (
-              fullName.includes(query) ||
-              username.includes(query) ||
               title.includes(query) ||
-              tags.some(tag => tag.includes(query))
+              tags.includes(query)
             ) {
-              results.push(data);
+              results.push({ id: doc.id, username: username, ...data });
             }
           });
 
@@ -39,10 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
               const resultItem = document.createElement('div');
               resultItem.classList.add('resultItem');
               resultItem.innerHTML = `
-                <p><strong>Username:</strong> ${data.username}</p>
+                <p><strong>Title:</strong> ${data.title}</p>
                 ${data.tags ? `<p><strong>Tags:</strong> ${data.tags.join(', ')}</p>` : ''}
                 <div>
-                  <button onclick="location.href='/profile/${data.username}'">VIEW PROFILE</button>
                   <button onclick="location.href='/testimony/${data.username}'">VIEW TESTIMONY</button>
                 </div>
               `;
@@ -53,8 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
         .catch((error) => {
-          console.error(`Error searching ${type}:`, error);
-          searchResults.innerHTML = `Error searching ${type}. Please try again.`;
+          console.error('Error fetching data:', error);
+          searchResults.innerHTML = 'Error fetching data. Please try again.';
         });
     } else {
       searchResults.innerHTML = 'Please enter a search query.';
@@ -105,3 +102,35 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('branding').addEventListener('click', () => {
   window.location.href = '../index';
 });
+
+function performSearch(query, type) {
+  const searchRef = type === 'profile' ? db.collection('users') : db.collection('testimonies');
+  searchRef.get()
+    .then((querySnapshot) => {
+      const results = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const fullName = data.name ? data.name.toLowerCase() : '';
+        const username = data.username ? data.username.toLowerCase() : '';
+        const title = data.title ? data.title.toLowerCase() : '';
+        const tags = data.tags ? data.tags.map(tag => tag.toLowerCase()) : [];
+
+        console.log('Checking testimony:', data.title, 'Tags:', tags); // Debugging log
+
+        if (
+          fullName.includes(query) ||
+          username.includes(query) ||
+          title.includes(query) ||
+          tags.includes(query.toLowerCase()) // Check if the tags include the query
+        ) {
+          results.push(data);
+        }
+      });
+
+      displayResults(results, query);
+    })
+    .catch((error) => {
+      console.error(`Error searching ${type}:`, error);
+      searchResults.innerHTML = `Error searching ${type}. Please try again.`;
+    });
+}
