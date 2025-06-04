@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Resend verification email
   sendCodeButton.addEventListener('click', async () => {
     try {
       const user = auth.currentUser;
@@ -206,19 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Error resending verification email: ', error);
       alert('Failed to send verification email. Please try again later.');
-    }
-  });
-  
-  // Resend verification email
-  sendCodeButton.addEventListener('click', async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        await user.sendEmailVerification();
-        alert('Verification email resent. Please check your inbox.');
-      }
-    } catch (error) {
-      console.error('Error resending verification email: ', error);
     }
   });
 
