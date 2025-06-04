@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch('../denominations.json'); // Ensure the correct path to the JSON file
       const data = await response.json();
-      const denominations = data.dominations;
+      const denominations = data.denominations;
       const editDenominationSelect = document.getElementById('editDenomination');
 
       denominations.forEach(denomination => {
