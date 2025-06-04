@@ -1,8 +1,16 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+
+:root {
+  --primary-color: #546bd6;
+  --primary-dark: #4353b0;
+  --background-color: #f0f3ff;
+}
+
 /* Global Styles */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f3ff;
-  color: #546bd6;
+  font-family: 'Roboto', Arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--primary-dark);
   margin: 0;
   padding: 0;
 }
@@ -14,10 +22,11 @@ body {
 }
 
 header {
-  background: #546bd6;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: #fff;
   padding: 10px 0;
-  border-bottom: #f0f3ff 3px solid;
+  border-bottom: var(--background-color) 3px solid;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 #headerContent {
@@ -58,7 +67,7 @@ header #branding img {
 button, input[type="submit"], .navButton {
   display: inline-block;
   height: 40px;
-  background: #546bd6;
+  background: var(--primary-color);
   color: #fff;
   border: 0;
   padding: 0 20px;
@@ -67,6 +76,7 @@ button, input[type="submit"], .navButton {
   font-size: 16px;
   margin-left: 10px;
   border-radius: 5px;
+  transition: background 0.3s;
 }
 
 /* nav {
@@ -214,7 +224,7 @@ header a:hover {
 
 
 button:hover, input[type="submit"]:hover, .navButton:hover {
-  background: #4353b0;
+  background: var(--primary-dark);
 }
 
 .hidden {
