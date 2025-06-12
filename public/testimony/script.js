@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fetch the banned words from the server
 async function fetchBannedWords() {
   try {
-    const response = await fetch('../../bannedlist.json'); // Adjust the path as needed
+    const response = await fetch('../bannedlist.json'); // Load banned words
     bannedWords = await response.json();
     console.log('Banned words loaded:', bannedWords);
   } catch (error) {
